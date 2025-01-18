@@ -39,7 +39,7 @@ var intelGPUMemoryChart = module.Chart{
 	Type:     module.Line,
 	Priority: prioGPUMemory,
 	Dims: module.Dims{
-		{ID: "memory_actual", Name: "memory", Div: precision},
+		{ID: "memory_actual", Name: "memory", Div: 1},
 	},
 }
 
