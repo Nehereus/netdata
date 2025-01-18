@@ -4,10 +4,10 @@ package intelgpu
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
 	"os/exec"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -52,11 +52,51 @@ type intelGpuTopExec struct {
 
 func (e *intelGpuTopExec) run() error {
 	var cmd *exec.Cmd
-
+	/*
+		  0. GPU Utilization (%), GPU active time of the elapsed time, per tile or device. Device-level is the average value of tiles for multi-tiles.
+		  1. GPU Power (W), per tile or device.
+		  2. GPU Frequency (MHz), per tile or device. Device-level is the average value of tiles for multi-tiles.
+		  3. GPU Core Temperature (Celsius Degree), per tile or device. Device-level is the average value of tiles for multi-tiles.
+		  4. GPU Memory Temperature (Celsius Degree), per tile or device. Device-level is the average value of tiles for multi-tiles.
+		  5. GPU Memory Utilization (%), per tile or device. Device-level is the average value of tiles for multi-tiles.
+		  6. GPU Memory Read (kB/s), per tile or device. Device-level is the sum value of tiles for multi-tiles.
+		  7. GPU Memory Write (kB/s), per tile or device. Device-level is the sum value of tiles for multi-tiles.
+		  8. GPU Energy Consumed (J), per tile or device.
+		  9. GPU EU Array Active (%), the normalized sum of all cycles on all EUs that were spent actively executing instructions. Per tile or device. Device-level is the average value of tiles for multi-tiles.
+		  10. GPU EU Array Stall (%), the normalized sum of all cycles on all EUs during which the EUs were stalled.
+			  At least one thread is loaded, but the EU is stalled. Per tile or device. Device-level is the average value of tiles for multi-tiles.
+		  11. GPU EU Array Idle (%), the normalized sum of all cycles on all cores when no threads were scheduled on a core. Per tile or device. Device-level is the average value of tiles for multi-tiles.
+		  12. Reset Counter, per tile or device. Device-level is the sum value of tiles for multi-tiles.
+		  13. Programming Errors, per tile or device. Device-level is the sum value of tiles for multi-tiles.
+		  14. Driver Errors, per tile or device. Device-level is the sum value of tiles for multi-tiles.
+		  15. Cache Errors Correctable, per tile or device. Device-level is the sum value of tiles for multi-tiles.
+		  16. Cache Errors Uncorrectable, per tile or device. Device-level is the sum value of tiles for multi-tiles.
+		  17. GPU Memory Bandwidth Utilization (%), per tile or device. Device-level is the average value of tiles for multi-tiles.
+		  18. GPU Memory Used (MiB), per tile or device. Device-level is the sum value of tiles for multi-tiles.
+		  19. PCIe Read (kB/s), per device.
+		  20. PCIe Write (kB/s), per device.
+		  21. Xe Link Throughput (kB/s), a list of tile-to-tile Xe Link throughput.
+		  22. Compute engine utilizations (%), per tile.
+		  23. Render engine utilizations (%), per tile.
+		  24. Media decoder engine utilizations (%), per tile.
+		  25. Media encoder engine utilizations (%), per tile.
+		  26. Copy engine utilizations (%), per tile.
+		  27. Media enhancement engine utilizations (%), per tile.
+		  28. 3D engine utilizations (%), per tile.
+		  29. GPU Memory Errors Correctable, per tile or device. Other non-compute correctable errors are also included. Device-level is the sum value of tiles for multi-tiles.
+		  30. GPU Memory Errors Uncorrectable, per tile or device. Other non-compute uncorrectable errors are also included. Device-level is the sum value of tiles for multi-tiles.
+		  31. Compute engine group utilization (%), per tile or device. Device-level is the average value of tiles for multi-tiles.
+		  32. Render engine group utilization (%), per tile or device. Device-level is the average value of tiles for multi-tiles.
+		  33. Media engine group utilization (%), per tile or device. Device-level is the average value of tiles for multi-tiles.
+		  34. Copy engine group utilization (%), per tile or device. Device-level is the average value of tiles for multi-tiles.
+		  35. Throttle reason, per tile.
+		  36. Media Engine Frequency (MHz), per tile or device. Device-level is the average value of tiles for multi-tiles.
+	*/
+	const modules = "1,2,5,18" //Power, Frequency,Memory Utilization, Memory Used
 	if e.device != "" {
-		cmd = exec.Command(e.ndsudoPath, "igt-device-json", "--interval", e.calcIntervalArg(), "--device", e.device)
+		cmd = exec.Command(e.ndsudoPath, "xpum-device-dump", "--device", e.device, "-m", modules)
 	} else {
-		cmd = exec.Command(e.ndsudoPath, "igt-json", "--interval", e.calcIntervalArg())
+		cmd = exec.Command(e.ndsudoPath, "xpum-dump", "-m", modules)
 	}
 
 	e.Debugf("executing '%s'", cmd)
@@ -78,9 +118,13 @@ func (e *intelGpuTopExec) run() error {
 	go func() {
 		defer close(done)
 		sc := bufio.NewScanner(r)
-		var buf bytes.Buffer
+		//var buf bytes.Buffer
 		var n int
 
+		// Skip header line if present
+		if sc.Scan() && !strings.Contains(sc.Text(), ":") {
+			// Skip the header
+		}
 		for sc.Scan() {
 			if n++; n > 1000 {
 				break
@@ -88,29 +132,35 @@ func (e *intelGpuTopExec) run() error {
 
 			text := sc.Text()
 
-			if buf.Len() == 0 && text != "{" || text == "" {
+			if text == "" {
 				continue
 			}
 
-			if text == "}," {
-				text = "}"
+			if !strings.Contains(text, ",") {
+				continue
 			}
 
-			buf.WriteString(text + "\n")
+			e.mux.Lock()
+			e.lastSample = text
+			e.mux.Unlock()
 
-			if text[0] == '}' {
-				e.mux.Lock()
-				e.lastSample = buf.String()
-				e.mux.Unlock()
-
-				select {
-				case firstSample <- struct{}{}:
-				default:
-				}
-
-				buf.Reset()
-				n = 0
+			select {
+			case firstSample <- struct{}{}:
+			default:
 			}
+			//if text[0] == '}' {
+			//	e.mux.Lock()
+			//	e.lastSample = buf.String()
+			//	e.mux.Unlock()
+			//
+			//	select {
+			//	case firstSample <- struct{}{}:
+			//	default:
+			//	}
+			//
+			//	buf.Reset()
+			//	n = 0
+			//}
 		}
 	}()
 
