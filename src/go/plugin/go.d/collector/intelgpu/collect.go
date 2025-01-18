@@ -80,7 +80,7 @@ func (c *Collector) getGPUSummaryStats() (*gpuSummaryStats, error) {
 func parseStatsLine(bytes []byte, stats *gpuSummaryStats) error {
 	line := string(bytes)
 	fields := strings.Split(line, ",")
-	if len(fields) != 5 {
+	if len(fields) != 6 {
 		return fmt.Errorf("invalid number of fields in line: %s", line) // Return zero value
 	}
 
