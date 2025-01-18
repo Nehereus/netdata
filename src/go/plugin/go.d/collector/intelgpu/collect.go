@@ -40,7 +40,7 @@ func (c *Collector) collect() (map[string]int64, error) {
 
 	mx["frequency_actual"] = int64(stats.Frequency.Actual * precision)
 	mx["power_gpu"] = int64(stats.Power.GPU * precision)
-	mx["memory_actual"] = int64(stats.Memory.Actual * precision)
+	mx["memory_actual"] = int64(stats.Memory.Actual)
 	//mx["power_package"] = int64(stats.Power.Package * precision)
 
 	//for name, es := range stats.Engines {

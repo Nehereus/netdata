@@ -31,7 +31,7 @@ var intelGPUFrequencyChart = module.Chart{
 }
 
 var intelGPUMemoryChart = module.Chart{
-	ID:       "igpu_frequency",
+	ID:       "igpu_memory",
 	Title:    "Intel GPU memory usage",
 	Units:    "MiB",
 	Fam:      "memory",
