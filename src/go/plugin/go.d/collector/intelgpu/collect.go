@@ -90,12 +90,12 @@ func parseStatsLine(bytes []byte, stats *gpuSummaryStats) error {
 	}
 
 	// Parse Memory Actual and Utilization
-	memoryActual, err := strconv.ParseFloat(fields[0], 64)
+	memoryActual, err := strconv.ParseFloat(fields[5], 64)
 	if err != nil {
 		return fmt.Errorf("failed to parse memory actual: %v", err)
 	}
 
-	memoryUtilization, err := strconv.ParseFloat(fields[1], 64)
+	memoryUtilization, err := strconv.ParseFloat(fields[4], 64)
 	if err != nil {
 		return fmt.Errorf("failed to parse memory utilization: %v", err)
 	}

@@ -9,16 +9,17 @@ import (
 const (
 	prioGPUFrequency = module.Priority + iota
 	prioGPUPower
-	prioGPUEngineBusy
+	prioGPUMemory
 )
 
 var charts = module.Charts{
 	intelGPUFrequencyChart.Copy(),
 	intelGPUPowerGPUChart.Copy(),
+	intelGPUMemoryChart.Copy(),
 }
-var intelGPUMemoryChart = module.Chart{
-	ID:       "igpu_memory",
-	Title:    "Intel GPU memory usage",
+var intelGPUFrequencyChart = module.Chart{
+	ID:       "igpu_frequency",
+	Title:    "Intel GPU frequency",
 	Units:    "MHz",
 	Fam:      "frequency",
 	Ctx:      "intelgpu.frequency",
@@ -29,14 +30,14 @@ var intelGPUMemoryChart = module.Chart{
 	},
 }
 
-var intelGPUFrequencyChart = module.Chart{
+var intelGPUMemoryChart = module.Chart{
 	ID:       "igpu_frequency",
-	Title:    "Intel GPU frequency",
+	Title:    "Intel GPU memory usage",
 	Units:    "MiB",
 	Fam:      "memory",
 	Ctx:      "intelgpu.memory",
 	Type:     module.Line,
-	Priority: prioGPUFrequency,
+	Priority: prioGPUMemory,
 	Dims: module.Dims{
 		{ID: "memory_actual", Name: "memory", Div: precision},
 	},
