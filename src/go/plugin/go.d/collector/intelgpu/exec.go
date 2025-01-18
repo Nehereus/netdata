@@ -94,9 +94,9 @@ func (e *intelGpuTopExec) run() error {
 	*/
 	const modules = "1,2,5,18" //Power, Frequency,Memory Utilization, Memory Used
 	if e.device != "" {
-		cmd = exec.Command(e.ndsudoPath, "xpum-device-dump", "--device", e.device, "-m", modules)
+		cmd = exec.Command(e.ndsudoPath, "xpum-device-dump", "--device", e.device, "--modules", modules)
 	} else {
-		cmd = exec.Command(e.ndsudoPath, "xpum-dump", "-m", modules)
+		cmd = exec.Command(e.ndsudoPath, "xpum-dump", "--modules", modules)
 	}
 
 	e.Debugf("executing '%s'", cmd)
