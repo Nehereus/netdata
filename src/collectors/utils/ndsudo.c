@@ -196,7 +196,7 @@ struct command {
     },
     {
        .name = "xpum-device-dump",
-       .params = "dump -d {{device}} --modules {{modules}}",
+       .params = "dump -d {{device}} -m {{modules}}",
        .search = {
            [0] = "xpumcli",
            [1] = NULL,
@@ -204,7 +204,7 @@ struct command {
     },
     {
        .name = "xpum-dump",
-       .params = "dump --modules {{modules}}",
+       .params = "dump -m {{modules}}",
        .search = {
            [0] = "xpumcli",
            [1] = NULL,
