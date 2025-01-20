@@ -118,18 +118,12 @@ func (e *intelGpuTopExec) run() error {
 	go func() {
 		defer close(done)
 		sc := bufio.NewScanner(r)
-		//var buf bytes.Buffer
-		var n int
 
 		// Skip header line if present
 		if sc.Scan() && !strings.Contains(sc.Text(), ":") {
 			// Skip the header
 		}
 		for sc.Scan() {
-			if n++; n > 1000 {
-				break
-			}
-
 			text := sc.Text()
 
 			if text == "" {
@@ -148,19 +142,6 @@ func (e *intelGpuTopExec) run() error {
 			case firstSample <- struct{}{}:
 			default:
 			}
-			//if text[0] == '}' {
-			//	e.mux.Lock()
-			//	e.lastSample = buf.String()
-			//	e.mux.Unlock()
-			//
-			//	select {
-			//	case firstSample <- struct{}{}:
-			//	default:
-			//	}
-			//
-			//	buf.Reset()
-			//	n = 0
-			//}
 		}
 	}()
 
